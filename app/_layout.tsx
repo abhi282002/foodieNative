@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 import './globals.css';
 
 export default function App() {
-  return <Stack />;
+  return <Slot />;
 }
