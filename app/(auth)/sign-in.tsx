@@ -4,7 +4,7 @@ import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 
-interface SignInProps {
+export interface SignInProps {
   email: string;
   password: string;
 }
