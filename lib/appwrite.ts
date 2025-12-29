@@ -2,6 +2,7 @@ import { SignInProps } from '@/app/(auth)/sign-in';
 import { SignUpProps } from '@/app/(auth)/sign-up';
 import {
   Account,
+  AppwriteException,
   Avatars,
   Client,
   Databases,
@@ -15,6 +16,20 @@ export const appwriteConfig = {
   databaseId: process.env.EXPO_PUBLIC_APPWRITE_DATABASE_ID!,
   tableId: process.env.EXPO_PUBLIC_APPWRITE_USER_TABLE_ID!,
 };
+
+export interface User {
+  $id: string;
+  $sequence: number;
+  $tableId: string;
+  $databaseId: string;
+  $createdAt: string;
+  $updatedAt: string;
+  $permissions: string[];
+  accountId: string;
+  avatar: string;
+  name: string;
+  email: string;
+}
 
 export const client = new Client();
 
@@ -53,7 +68,7 @@ export const createUser = async ({ name, email, password }: SignUpProps) => {
     const newUser = await tablesDB.createRow({
       databaseId: appwriteConfig.databaseId,
       tableId: appwriteConfig.tableId,
-      rowId: ID.unique(),
+      rowId: newAccount.$id,
       data: {
         accountId: newAccount.$id,
         avatar: avatarUrl,
@@ -77,5 +92,29 @@ const signIn = async ({ email, password }: SignInProps) => {
     }
   } catch (error) {
     throw new Error(error as string);
+  }
+};
+
+export const getCurrentUser = async (): Promise<User | null> => {
+  try {
+    const currentAccount = await account.get();
+    if (!currentAccount.$id) {
+      throw new Error('Failed to get current user');
+    }
+
+    const currentUser: User = await tablesDB.getRow<User>({
+      databaseId: appwriteConfig.databaseId,
+      tableId: appwriteConfig.tableId,
+      rowId: currentAccount.$id,
+    });
+
+    return currentUser;
+  } catch (error: unknown) {
+    if (error instanceof AppwriteException) {
+      console.error('Get current user error:', error.message, error);
+    } else {
+      console.error('Get current user error:', error);
+    }
+    throw error;
   }
 };
